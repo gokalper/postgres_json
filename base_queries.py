@@ -1,14 +1,22 @@
 import psycopg2
 
+table_name = "json_table7"
+
+
 def compose_query(query):
     conn = None
     response = None
     try:
-        conn = psycopg2.connect("dbname='test' user='postgres' host='localhost' password='password'")
+        conn = psycopg2.connect("dbname='test' user='postgres' host='localhost' password='daycare'")
         cur = conn.cursor()
         cur.execute(query)
-        response = cur.fetchall()
+        try:
+            response = cur.fetchall()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+
         cur.close()
+        print("SUCCESS")
 
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -19,36 +27,20 @@ def compose_query(query):
             conn = None
             print("Database Connection Closed.")
 
-    return(response)
+    return response
 
-table = "jsontable4"
-query = """SELECT * from {}""".format(table)
-rows = compose_query(query)
-for row in rows:
-    print(row)
 
-query = """
+def get_all_rows(table_name):
+    some_query = """SELECT * from {}""".format(table_name)
+    rows = compose_query(some_query)
+    for row in rows:
+        print(row)
 
-select *
-  from jsontable4
-      ,jsonb_each(data) with ordinality arr(item, value, index)
-      where item->>'snacks' = 'cookies'
-      and name = 'John'
-;
 
-with snack as ( select('{' || index - 1 || ',value}')::text[] as path
-from jsontable4, jsonb_object_keys(data) with ordinality arr(item, index)
-where item->> 'snacks' = 'cookies'
-and name = 'John'
-)
-update jsontable4 set data = jsonb_set(data, snack.path, '"crazy"', false) from snack
+get_all_rows(table_name)
 
-where
-name = 'John';
+query = """update json_table7 set data = jsonb_set(data, '{snacks}', '"what"'::jsonb) where name = 'John';"""
+compose_query(query)
 
-select *
-from customers;
-"""
-rows = compose_query(query)
-# for row in rows:
-#     print(row)
+get_all_rows(table_name)
+
